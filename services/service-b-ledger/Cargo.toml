@@ -1,0 +1,1 @@
+[package]\nname = "service-b-ledger"\nversion = "0.1.0"\nedition = "2024"\n\n[dependencies]\nrocksdb = "0.21.0"\ngrpcio = "0.13.0"
