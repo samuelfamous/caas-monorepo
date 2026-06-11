@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caas.infrastructure.internal/schemas/event_payload.json",
+  "title": "ComplianceRiskEventPayload",
+  "type": "object",
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenantBankId": {
+      "type": "string",
+      "pattern": "^NG-BANK-[0-9]{3}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "transactionId": { "type": "string" },
+        "amountNgn": { "type": "number", "minimum": 0.0 },
+        "amlFlagged": { "type": "boolean" },
+        "stressTestMetrics": {
+          "type": "object",
+          "properties": {
+            "riskWeightedAssetImpact": { "type": "number" },
+            "postTxnTier1CapitalRatio": { "type": "number", "maximum": 1.0, "minimum": 0.0 }
+          },
+          "required": ["riskWeightedAssetImpact", "postTxnTier1CapitalRatio"]
+        },
+        "aiInference": {
+          "type": "object",
+          "properties": {
+            "anomalyScore": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "strFilingRecommended": { "type": "boolean" },
+            "primaryRiskVector": { "type": "string" }
+          },
+          "required": ["anomalyScore", "strFilingRecommended", "primaryRiskVector"]
+        }
+      },
+      "required": ["transactionId", "amountNgn", "amlFlagged", "stressTestMetrics", "aiInference"]
+    }
+  },
+  "required": ["eventId", "tenantBankId", "timestamp", "schemaVersion", "data"]
+}

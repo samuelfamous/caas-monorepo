@@ -1,0 +1,58 @@
+name: "Clean Architecture Architectural Boundary Guard"
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  enforce-boundary-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code repository repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Verify Layer Isolation: Layer 1 Domain Core Absolute Privacy Protection"
+        run: |
+          echo "=========================================================================================="
+          echo "Executing Clean Architecture Structural Violation Scans Across Monorepo Polyglot Tree"
+          echo "Core Invariant Rule: Inner Domain Core cannot import outer layers (infra, ports, adapter)."
+          echo "=========================================================================================="
+          
+          VIOLATIONS_FOUND=0
+
+          # Scan 1: Check Go Core Domain packages for outer layer imports
+          if grep -r --include="*.go" -E "github.com/caas/monorepo/services/service-a-ingress/internal/(infra|usecase|adapter)" services/service-a-ingress/internal/domain/; then
+             echo "CRITICAL ARCHITECTURAL BOUNDARY VIOLATION: Go Domain layer imports outer infrastructure components!"
+             VIOLATIONS_FOUND=$((VIOLATIONS_FOUND + 1))
+          fi
+
+          # Scan 2: Check Rust Core Domain models for crate dependencies pointing to infra structures
+          if grep -r --include="*.rs" -E "use crate::infra::" services/service-b-ledger/src/domain.rs; then
+             echo "CRITICAL ARCHITECTURAL BOUNDARY VIOLATION: Rust Domain structures reference structural network infra elements!"
+             VIOLATIONS_FOUND=$((VIOLATIONS_FOUND + 1))
+          fi
+
+          # Scan 3: Check Java Domain classes for infrastructure, springframework, or database driver persistence imports
+          if grep -r --include="*.java" -E "import com\.caas\.monorepo\.scoring\.infra|javax\.persistence|org\.springframework" services/service-c-scoring/src/main/java/com/caas/scoring/domain/; then
+             echo "CRITICAL ARCHITECTURAL BOUNDARY VIOLATION: Java Core Domain Model contaminated with outer framework dependencies!"
+             VIOLATIONS_FOUND=$((VIOLATIONS_FOUND + 1))
+          fi
+
+          # Scan 4: Check Python AI models for FastAPI network adapters imports inside business logic scripts
+          if grep -r --include="*.py" -E "from \.\.infra import|import fastapi" services/service-e-ai/src/domain/; then
+             echo "CRITICAL ARCHITECTURAL BOUNDARY VIOLATION: Python Risk Invariants bound to Infrastructure Transport frameworks!"
+             VIOLATIONS_FOUND=$((VIOLATIONS_FOUND + 1))
+          fi
+
+          # Terminate pipeline execution with failure code if any violations were flagged during the scan steps
+          if [ $VIOLATIONS_FOUND -ne 0 ]; then
+             echo "=========================================================================================="
+             echo "BUILD BLOCKED: Pull Request introduces Clean Architecture Structural Degradation."
+             echo "Review directory structural layers before re-submitting validation tokens."
+             echo "=========================================================================================="
+             exit 1
+          fi
+          
+          echo "Validation complete. Architectural boundary rules intact."

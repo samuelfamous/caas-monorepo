@@ -1,0 +1,32 @@
+groups:
+  - name: compliance_platform_service_sla_alerts
+    rules:
+      - alert: HighP95LatencySLAFound
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service)) > 0.050
+        for: 15s
+        labels:
+          severity: critical
+          tier: infrastructure
+        annotations:
+          summary: "P95 API Ingress Latency has breached SLA budget"
+          description: "Current P95 latency for service {{ $labels.service }} is higher than 50ms (Value: {{ $value }}s). This breaches the CBN live stream reporting agreement."
+
+      - alert: ElevatingErrorRatesDetected
+        expr: (sum(rate(http_requests_total{status=~"5.."}[1m])) / sum(rate(http_requests_total[1m]))) * 100 > 0.05
+        for: 30s
+        labels:
+          severity: warning
+          tier: compliance-engine
+        annotations:
+          summary: "Internal error rate trending upward"
+          description: "System standard error code generation has exceeded 0.05% across total traffic (Current: {{ $value }}%). Internal database outbox locks or gRPC failures may be present."
+
+      - alert: HardInstanceDowntimeDetected
+        expr: up{job=~"caas-services.*"} == 0
+        for: 10s
+        labels:
+          severity: critical
+          tier: platform-core
+        annotations:
+          summary: "Core Compliance Cluster Instance Inaccessible"
+          description: "Instance {{ $labels.instance }} of container group {{ $labels.job }} is reporting offline. Failover systems initiated."
