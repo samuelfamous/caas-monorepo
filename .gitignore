@@ -1,1 +1,7 @@
-node_modules/\n.target/\n*.exe\n*.db\n.DS_Store
+target/
+**/*.rlib
+**/*.a
+node_modules/
+dist/
+.env
+.DS_Store
