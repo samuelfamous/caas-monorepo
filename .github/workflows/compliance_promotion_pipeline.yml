@@ -7,57 +7,51 @@ on:
     branches: [ develop, staging, main ]
 
 jobs:
-  # Stage 1: Parallel Verification Across Language Modules
+  # Stage 1: Parallel Verification (Matrix Strategy)
   verify-code-quality:
-    name: Run Continuous Integration Verification Tests
+    name: Parallel Compliance Verification
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: service-a-ingress
+            name: Go Ingress
+            setup: actions/setup-go@v5
+            with: { go-version: '1.22' }
+            run: |
+              go mod tidy
+              go test -v ./cmd/...
+          - service: service-b-ledger
+            name: Rust Ledger
+            setup: actions/rust-toolchain@stable
+            with: { toolchain: stable }
+            run: |
+              cargo check
+              cargo test --verbose
+          - service: service-e-ai
+            name: Python AI Risk
+            setup: actions/setup-python@v5
+            with: { python-version: '3.11' }
+            run: |
+              pip install -r requirements.txt
+              PYTHONPATH=. python -m unittest discover -s tests
+          - service: service-c-trust
+            name: Java Trust
+            setup: actions/setup-java@v4
+            with: { java-version: '21', distribution: 'temurin' }
+            run: mvn clean test
     steps:
-      - name: Checkout Source Code Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
-
-      # Verification Pass: Go Ingress Service
-      - name: Setup Go Language Compiler
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-      - name: Verify Go Subsystem Compilation
+      - name: Setup ${{ matrix.name }}
+        uses: ${{ matrix.setup }}
+        with: ${{ matrix.with }}
+      - name: Verify ${{ matrix.name }}
         run: |
-          cd services/service-a-ingress
-          go mod tidy
-          go test -v ./cmd/...
+          cd services/${{ matrix.service }}
+          ${{ matrix.run }}
 
-      # Verification Pass: Rust Ledger Engine
-      - name: Setup Rust Toolchain
-        uses: actions/rust-toolchain@stable
-      - name: Verify Rust Cryptographic Ledger Compilation
-        run: |
-          cd services/service-b-ledger
-          cargo check
-          cargo test --verbose
-
-      # Verification Pass: Python AI Risk Subsystem
-      - name: Setup Python Runtime Env
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Verify Python AI Inference Logic
-        run: |
-          cd services/service-e-ai
-          pip install -r requirements.txt
-          PYTHONPATH=. python -m unittest discover -s tests
-
-      # Verification Pass: Java Trust Engine
-      - name: Setup OpenJDK Runtime
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Verify Java Trust Evaluation Engine
-        run: |
-          cd services/service-c-trust
-          mvn clean test
-
-  # Stage 2: Staging-Specific High-Throughput Verification Performance Pass
+  # Stage 2: Staging-Specific High-Throughput Performance Pass
   performance-validation:
     name: Execute Automated k6 Stress Tests
     needs: verify-code-quality
@@ -66,16 +60,12 @@ jobs:
     steps:
       - name: Checkout Source Repository
         uses: actions/checkout@v4
-
       - name: Spin up Infrastructure Containers Mesh
         run: docker compose up --build -d
-
       - name: Setup Grafana k6 Test Engine
         uses: grafana/setup-k6-action@v1
-
       - name: Execute Distributed Stress Verification Runs
         run: k6 run tests/load/stress_suite.js
-
       - name: Teardown Operational Containers Infrastructure
         if: always()
         run: docker compose down -v
@@ -89,16 +79,13 @@ jobs:
     steps:
       - name: Checkout Source Repository
         uses: actions/checkout@v4
-
       - name: Build Production Image Tags (Go Ingress Gateway)
         run: |
           docker build -t cbn-compliance/service-a-ingress:${{ github.sha }} ./services/service-a-ingress
           docker tag cbn-compliance/service-a-ingress:${{ github.sha }} cbn-compliance/service-a-ingress:latest
-
       - name: Build Production Image Tags (Rust Cryptographic Ledger)
         run: |
           docker build -t cbn-compliance/service-b-ledger:${{ github.sha }} ./services/service-b-ledger
           docker tag cbn-compliance/service-b-ledger:${{ github.sha }} cbn-compliance/service-b-ledger:latest
-
       - name: Log Out Deployment Success Manifest
         run: echo "Deployment package generation pipeline completed successfully for release version ${{ github.sha }}."
